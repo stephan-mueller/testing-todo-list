@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>de.openknowledge.projects.showcase.testing-todo-list</groupId>
+    <artifactId>todo-list-service</artifactId>
+    <version>0</version>
+    <packaging>war</packaging>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+
+        <failOnMissingWebXml>false</failOnMissingWebXml>
+
+        <timestamp>${maven.build.timestamp}</timestamp>
+
+        <!-- Thorntail -->
+        <version.thorntail>2.5.0.Final</version.thorntail>
+
+        <!--
+        <thorntail.bind.address>0.0.0.0</thorntail.bind.address>
+        <thorntail.http.port>8080</thorntail.http.port>
+        <thorntail.port.offset>0</thorntail.port.offset>
+        <thorntail.context.path>todo-list-service</thorntail.context.path>
+        -->
+
+        <!--  Java EE specs  -->
+        <version.annotation>1.3</version.annotation>
+        <version.cdi>2.0</version.cdi>
+        <version.jaxrs>2.1</version.jaxrs>
+        <version.jsonb>1.0</version.jsonb>
+        <version.jsonp>1.1</version.jsonp>
+        <version.jpa>2.2</version.jpa>
+        <version.jta>1.2</version.jta>
+        <version.validation>2.0.0.Final</version.validation>
+
+        <!-- MicroProfile specs  -->
+        <version.mp-config>1.3</version.mp-config>
+        <version.mp-health>2.0</version.mp-health>
+        <version.mp-metrics>2.0</version.mp-metrics>
+        <version.mp-openapi>1.1</version.mp-openapi>
+
+        <version.resteasy>3.6.3.Final</version.resteasy>
+
+        <version.h2>1.4.197</version.h2>
+
+        <version.apache_commons-lang>3.6</version.apache_commons-lang>
+
+        <version.slf4j>1.6.3</version.slf4j>
+
+        <version.dockerfile-plugin>1.4.12</version.dockerfile-plugin>
+
+        <version.junit5>5.5.1</version.junit5>
+        <version.junit5-launcher>1.5.1</version.junit5-launcher>
+        <version.assertj>3.13.0</version.assertj>
+        <version.mockito>3.0.0</version.mockito>
+
+        <version.testcontainers>1.11.3</version.testcontainers>
+        <version.rest-assured>4.0.0</version.rest-assured>
+        <version.hamcrest>2.1</version.hamcrest>
+
+        <version.database-rider>1.7.1</version.database-rider>
+        <version.eclipselink>2.7.3</version.eclipselink>
+
+        <version.cucumber>4.8.0</version.cucumber>
+
+        <version.hibernate-validator>5.2.4.Final</version.hibernate-validator>
+
+        <version.sonarqube-scanner>3.3.0.603</version.sonarqube-scanner>
+        <sonar.jacoco.reportPaths>${project.build.directory}/jacoco.exec.merged</sonar.jacoco.reportPaths>
+        <sonar.junit.reportPaths>${project.build.directory}/surefire-reports</sonar.junit.reportPaths>
+    </properties>
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>io.thorntail</groupId>
+                <artifactId>thorntail-maven-plugin</artifactId>
+                <version>${version.thorntail}</version>
+                <!--
+                <configuration>
+                    <properties>
+                        <thorntail.bind.address>${thorntail.bind.address}</thorntail.bind.address>
+                        <thorntail.http.port>${thorntail.http.port}</thorntail.http.port>
+                        <thorntail.port.offset>${thorntail.port.offset}</thorntail.port.offset>
+                        <thorntail.context.path>${thorntail.context.path}</thorntail.context.path>
+                    </properties>
+                </configuration>
+                -->
+                <executions>
+                    <execution>
+                        <id>thorntail-package</id>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>exec-maven-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <executions>
+                    <execution>
+                        <id>Copy thorntail jar and build docker images</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${basedir}/src/test/resources/docker/init-thorntail-test-container.sh
+                                ${basedir}/target/${project.build.finalName}-thorntail.jar
+                            </executable>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>${version.dockerfile-plugin}</version>
+                <executions>
+                    <execution>
+                        <id>default</id>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <repository>todo-list-service</repository>
+                    <tag>${project.version}</tag>
+                    <buildArgs>
+                        <JAR_FILE>${project.build.finalName}-thorntail.jar</JAR_FILE>
+                    </buildArgs>
+                    <skipDockerInfo>true</skipDockerInfo>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.22.1</version>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.7.9</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>org.jacoco.core</artifactId>
+                        <version>0.7.9</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>default-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-prepare-agent-integration</id>
+                        <goals>
+                            <goal>prepare-agent-integration</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-report</id>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-report-integration</id>
+                        <goals>
+                            <goal>report-integration</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <fileSets>
+                        <fileSet implementation="org.apache.maven.shared.model.fileset.FileSet">
+                            <directory>${project.build.directory}</directory>
+                            <includes>
+                                <include>*.exec</include>
+                            </includes>
+                        </fileSet>
+                    </fileSets>
+                    <destFile>${project.build.directory}/jacoco.exec.merged</destFile>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.3.1</version>
+                <configuration>
+                    <targetClasses>
+                        <param>de.openknowledge.*</param>
+                    </targetClasses>
+                    <outputFormats>
+                        <format>html</format>
+                        <format>xml</format>
+                    </outputFormats>
+                    <excludedTestClasses>
+                        <excludedTestClass>*IT</excludedTestClass>
+                    </excludedTestClasses>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.thorntail</groupId>
+                <artifactId>bom-all</artifactId>
+                <version>${version.thorntail}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <!--
+            <dependency>
+                <groupId>io.thorntail</groupId>
+                <artifactId>cdi</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>io.thorntail</groupId>
+                <artifactId>jaxrs</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>io.thorntail</groupId>
+                <artifactId>jaxrs-jsonb</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>io.thorntail</groupId>
+                <artifactId>jpa</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>io.thorntail</groupId>
+                <artifactId>transactions</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>io.thorntail</groupId>
+                <artifactId>undertow</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>io.thorntail</groupId>
+                <artifactId>microprofile-config</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>io.thorntail</groupId>
+                <artifactId>microprofile-health</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>io.thorntail</groupId>
+                <artifactId>microprofile-metrics</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>io.thorntail</groupId>
+                <artifactId>microprofile-openapi</artifactId>
+            </dependency>
+            -->
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Java EE -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>${version.annotation}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.enterprise</groupId>
+            <artifactId>cdi-api</artifactId>
+            <version>${version.cdi}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>${version.jaxrs}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.json.bind</groupId>
+            <artifactId>javax.json.bind-api</artifactId>
+            <version>${version.jsonb}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.json</groupId>
+            <artifactId>javax.json-api</artifactId>
+            <version>${version.jsonp}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.persistence</groupId>
+            <artifactId>javax.persistence-api</artifactId>
+            <version>${version.jpa}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.transaction</groupId>
+            <artifactId>javax.transaction-api</artifactId>
+            <version>${version.jta}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>${version.validation}</version>
+        </dependency>
+
+        <!-- Microprofiles -->
+        <dependency>
+            <groupId>org.eclipse.microprofile.config</groupId>
+            <artifactId>microprofile-config-api</artifactId>
+            <version>${version.mp-config}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.microprofile.health</groupId>
+            <artifactId>microprofile-health-api</artifactId>
+            <version>${version.mp-health}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.microprofile.metrics</groupId>
+            <artifactId>microprofile-metrics-api</artifactId>
+            <version>${version.mp-metrics}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.microprofile.openapi</groupId>
+            <artifactId>microprofile-openapi-api</artifactId>
+            <version>${version.mp-openapi}</version>
+        </dependency>
+
+        <!-- Resteasy -->
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxrs</artifactId>
+            <version>${version.resteasy}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Database -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${version.h2}</version>
+        </dependency>
+
+        <!-- Apache Commons -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${version.apache_commons-lang}</version>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${version.slf4j}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${version.slf4j}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Unit Testing -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>${version.junit5-launcher}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${version.junit5}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>${version.junit5}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${version.assertj}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${version.mockito}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${version.mockito}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Persistence Testing -->
+        <dependency>
+            <groupId>com.github.database-rider</groupId>
+            <artifactId>rider-core</artifactId>
+            <version>${version.database-rider}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.database-rider</groupId>
+            <artifactId>rider-cdi</artifactId>
+            <version>${version.database-rider}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>eclipselink</artifactId>
+            <version>${version.eclipselink}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Integration Testing -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>${version.rest-assured}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>json-path</artifactId>
+            <version>${version.rest-assured}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>${version.rest-assured}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+            <version>${version.hamcrest}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${version.testcontainers}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${version.testcontainers}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Acceptance Testing -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java8</artifactId>
+            <version>${version.cucumber}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit</artifactId>
+            <version>${version.cucumber}</version>
+        </dependency>
+
+        <!-- Other testing dependencies -->
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-client</artifactId>
+            <version>${version.resteasy}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${version.hibernate-validator}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
