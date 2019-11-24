@@ -65,6 +65,8 @@
 
         <version.archunit>0.10.2</version.archunit>
 
+        <version.gatling>3.2.1</version.gatling>
+
         <version.hibernate-validator>5.2.4.Final</version.hibernate-validator>
 
         <version.sonarqube-scanner>3.3.0.603</version.sonarqube-scanner>
@@ -442,6 +444,26 @@
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5-engine</artifactId>
             <version>${version.archunit}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Performance Testing -->
+        <dependency>
+            <groupId>io.gatling.highcharts</groupId>
+            <artifactId>gatling-charts-highcharts</artifactId>
+            <version>${version.gatling}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.gatling</groupId>
+            <artifactId>gatling-app</artifactId>
+            <version>${version.gatling}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.gatling</groupId>
+            <artifactId>gatling-recorder</artifactId>
+            <version>${version.gatling}</version>
             <scope>test</scope>
         </dependency>
 
