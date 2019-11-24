@@ -16,6 +16,7 @@
 package de.openknowledge.archetype.base;
 
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 /**
@@ -27,10 +28,18 @@ public final class IntegrationTestUtil {
   public static final String HEALTH_URI = "http://{host}:{port}/health";
   public static final String METRICS_URI = "http://{host}:{port}/metrics";
 
+  private static final Network network = Network.newNetwork();
+  private static final GenericContainer h2Container = new GenericContainer("oscarfonts/h2:1.1.119")
+      .withNetwork(network)
+      .withNetworkAliases("h2db")
+      .waitingFor(
+          Wait.forLogMessage(".*TCP server running.*\n", 1)
+      );
   private static final int HTTP_PORT = 8080;
   private static final GenericContainer testContainer =
       new GenericContainer("todo-list-service:0")
           .withExposedPorts(HTTP_PORT)
+          .withNetwork(network)
           .waitingFor(
               Wait.forHttp("/todo-list-service/api/hello")
           );
@@ -41,6 +50,10 @@ public final class IntegrationTestUtil {
 
   public static GenericContainer getTestContainer() {
     return testContainer;
+  }
+
+  public static GenericContainer getH2Container() {
+    return h2Container;
   }
 
   public static String getContextRoot() {
