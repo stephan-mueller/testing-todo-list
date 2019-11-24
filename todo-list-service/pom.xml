@@ -61,7 +61,7 @@
         <version.assertj>3.13.0</version.assertj>
         <version.mockito>3.0.0</version.mockito>
 
-        <version.testcontainers>1.11.3</version.testcontainers>
+        <version.testcontainers>1.12.3</version.testcontainers>
         <version.rest-assured>4.0.0</version.rest-assured>
         <version.hamcrest>2.1</version.hamcrest>
 
@@ -106,24 +106,6 @@
                         <goals>
                             <goal>package</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>exec-maven-plugin</artifactId>
-                <groupId>org.codehaus.mojo</groupId>
-                <executions>
-                    <execution>
-                        <id>Copy thorntail jar and build docker images</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${basedir}/src/test/resources/docker/init-thorntail-test-container.sh
-                                ${basedir}/target/${project.build.finalName}-thorntail.jar
-                            </executable>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

@@ -18,14 +18,11 @@ package de.openknowledge.archetype.base.application.todo;
 import de.openknowledge.archetype.base.IntegrationTestUtil;
 
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.ContainerLaunchException;
-import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.Network;
-import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.net.URI;
@@ -43,14 +40,8 @@ import io.restassured.module.jsv.JsonSchemaValidator;
 @Testcontainers
 public class TodoResourceIT {
 
-  // Man kann das vermutlich auch hier drüber lösen, das Network mit @Rule definieren und dann nutzen.
-  // Allerdings sehe ich das Problem, dass testContainer davon abhängig ist, dass h2 bereits läuft.
-  // Daher denke ich, dass der sauberste Weg der aktuelle ist, über die @BeforeAll-Methode.
-//  @Container
-  private static GenericContainer h2;
-
-//  @Container
-  private static GenericContainer testContainer;
+  @Container
+  private static GenericContainer testContainer = IntegrationTestUtil.getTestContainer();
 
   private static String uri;
 
@@ -62,33 +53,11 @@ public class TodoResourceIT {
 
   @BeforeAll
   public static void setUp() {
-    h2 = IntegrationTestUtil.getH2Container();
-    testContainer = IntegrationTestUtil.getTestContainer();
-
-    try {
-      h2.start(); // <-- der hier wirft *immer* einen Fehler
-      testContainer.start();
-    } catch (ContainerLaunchException e) {
-      // Das Starten schlägt leider wegen dem "waitingFor" fehl, da das Pattern scheinbar noch nicht passt.
-      // Die Ausgabe im Log sieht etwa so aus:
-      //
-      //  Web server running on http://172.17.0.2:81 (others can connect)
-      //  TCP server running on tcp://172.17.0.2:1521 (others can connect)
-      System.err.println("Failed to start h2: " + e);
-      e.printStackTrace();
-    }
-
     uri = UriBuilder.fromUri(IntegrationTestUtil.BASE_URI)
         .resolveTemplate("host", testContainer.getContainerIpAddress())
         .resolveTemplate("port", testContainer.getFirstMappedPort())
         .resolveTemplate("context-root", IntegrationTestUtil.getContextRoot())
         .toTemplate();
-  }
-
-  @AfterAll
-  public static void tearDown() {
-    h2.stop();
-    testContainer.stop();
   }
 
   private URI getListUri() {
@@ -165,27 +134,28 @@ public class TodoResourceIT {
         .body("size()", Matchers.is(1));
   }
 
-//  @Test
-//  //@DataSet(value = "datasets/todos-create.yml", strategy = SeedStrategy.CLEAN_INSERT, cleanBefore = true, transactional = true)
-//  //@ExpectedDataSet(value = "datasets/todos-create.yml")
-//  public void createTodoShouldReturn400ForMissingDone() {
-//    RestAssured.given()
-//        .accept(MediaType.APPLICATION_JSON)
-//        .contentType(MediaType.APPLICATION_JSON)
-//        .body("{\n"
-//              + "  \"title\": \"clean fridge\",\n"
-//              + "  \"description\": \"It's a mess\",\n"
-//              + "  \"dueDate\": \"2018-01-01T12:34:56Z\n"
-//              + "}")
-//        .when()
-//        .post(getListUri())
-//        .then()
-//        .contentType(MediaType.APPLICATION_JSON)
-//        .statusCode(Status.BAD_REQUEST.getStatusCode())
-//        .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("schema/ErrorResponses-schema.json"))
-//        .rootPath("'errors'")
-//        .body("size()", Matchers.is(1));
-//  }
+  @Test
+  @Disabled // TODO: does not work, need to be fixed
+  //@DataSet(value = "datasets/todos-create.yml", strategy = SeedStrategy.CLEAN_INSERT, cleanBefore = true, transactional = true)
+  //@ExpectedDataSet(value = "datasets/todos-create.yml")
+  public void createTodoShouldReturn400ForMissingDone() {
+    RestAssured.given()
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body("{\n"
+              + "  \"title\": \"clean fridge\",\n"
+              + "  \"description\": \"It's a mess\",\n"
+              + "  \"dueDate\": \"2018-01-01T12:34:56Z\n"
+              + "}")
+        .when()
+        .post(getListUri())
+        .then()
+        .contentType(MediaType.APPLICATION_JSON)
+        .statusCode(Status.BAD_REQUEST.getStatusCode())
+        .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("schema/ErrorResponses-schema.json"))
+        .rootPath("'errors'")
+        .body("size()", Matchers.is(1));
+  }
 
   @Test
   //@DataSet(value = "datasets/todos-create.yml", strategy = SeedStrategy.CLEAN_INSERT, cleanBefore = true, transactional = true)

@@ -45,6 +45,7 @@ public class CustomCorsFilterIT {
     uri = UriBuilder.fromUri(IntegrationTestUtil.BASE_URI)
         .resolveTemplate("host", testContainer.getContainerIpAddress())
         .resolveTemplate("port", testContainer.getFirstMappedPort())
+        .resolveTemplate("context-root", IntegrationTestUtil.getContextRoot())
         .toTemplate();
   }
 

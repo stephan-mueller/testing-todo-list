@@ -78,7 +78,7 @@ public class HelloWorldResourceMetricsIT {
         .get(UriBuilder.fromUri(uri).path("application").build())
         .then()
         .statusCode(Response.Status.OK.getStatusCode())
-        .body("size()", Matchers.is(3));
+        .body("size()", Matchers.is(9));
 
     response
         .rootPath("'HelloWorld.HelloWorldResource'")
@@ -106,5 +106,6 @@ public class HelloWorldResourceMetricsIT {
     response
         .rootPath("'HelloWorld.sayHelloWorld'")
         .body("size()", Matchers.is(15));
+
   }
 }

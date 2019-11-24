@@ -40,6 +40,7 @@ public final class IntegrationTestUtil {
       new GenericContainer("todo-list-service:0")
           .withExposedPorts(HTTP_PORT)
           .withNetwork(network)
+          .dependsOn(h2Container)
           .waitingFor(
               Wait.forHttp("/todo-list-service/api/hello")
           );
